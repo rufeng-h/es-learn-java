@@ -1,0 +1,39 @@
+server:
+  port: 8000
+
+spring:
+  # spring email
+  #  mail:
+  #    username: chunfengh163@163.com
+  #    host: smtp.163.com
+  #    password: OYZDLGLUUOLFGOEV
+  # datasource
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 123456
+    url: jdbc:mysql://localhost:3306/es?serverTimezone=Asia/Shanghai
+  # jackson
+  jackson:
+    default-property-inclusion: non_null
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  # http file
+  servlet:
+    multipart:
+      max-request-size: 1000MB
+      max-file-size: 1000MB
+      resolve-lazily: true
+  # default not allow
+  main:
+    allow-circular-references: false
+  # mybatis
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    use-generated-keys: true
+    jdbc-type-for-null: null
+    local-cache-scope: statement
+  mapper-locations: classpath:/mapper/**/*.xml
+#  type-aliases-package: com.rufeng.healthman.pojo

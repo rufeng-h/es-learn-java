@@ -1,0 +1,15 @@
+logging:
+  level:
+    web: DEBUG
+    com.windcf.eslearn: DEBUG
+    sql: DEBUG
+mybatis:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#  main:
+#    allow-circular-references: true
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /docs
+  packages-to-scan: com.windcf.eslearn.controller
