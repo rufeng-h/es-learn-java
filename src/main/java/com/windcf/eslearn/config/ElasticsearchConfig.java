@@ -8,7 +8,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
 
+import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * @author chunf
@@ -29,8 +32,16 @@ public class ElasticsearchConfig {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.valueOf("application/vnd.elasticsearch+json;compatible-with=8"));
             headers.setAccept(Collections.singletonList(MediaType.valueOf("application/vnd.elasticsearch+json;compatible-with=8")));
+
+            List<String> uris = elasticsearchProperties.getUris();
+            List<String> hostAndPort = new ArrayList<>();
+            for (String s : uris) {
+                URI uri = URI.create(s);
+                hostAndPort.add(uri.getHost());
+                hostAndPort.add(String.valueOf(uri.getPort()));
+            }
             return ClientConfiguration.builder()
-                    .connectedTo("localhost", "9200")
+                    .connectedTo(hostAndPort.toArray(new String[0]))
                     .withBasicAuth(elasticsearchProperties.getUsername(), elasticsearchProperties.getPassword())
                     .withPathPrefix(elasticsearchProperties.getPathPrefix())
                     .withDefaultHeaders(headers)

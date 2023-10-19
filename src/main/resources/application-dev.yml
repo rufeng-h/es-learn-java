@@ -2,6 +2,8 @@ logging:
   level:
     web: DEBUG
     com.windcf.eslearn: DEBUG
+    # 打印query dsl
+    org.springframework.data.elasticsearch: TRACE
     sql: DEBUG
 mybatis:
   configuration:

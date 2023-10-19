@@ -16,17 +16,25 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 @SpringBootTest
+@ActiveProfiles("dev")
 class EsLearnApplicationTests {
     @Autowired
     private ElasticsearchClient client;
 
     @Autowired
     private ResourcePatternResolver resourceLoader;
+
+    @Autowired
+    private ElasticsearchOperations elasticsearchOperations;
 
     @Autowired
     private HotelService hotelService;
@@ -72,5 +80,8 @@ class EsLearnApplicationTests {
     @Test
     void count() throws IOException {
         System.out.println(client.cat().count(CountRequest.of(b -> b.index("hotel"))));
+        System.out.println(elasticsearchOperations.count(Query.findAll(), HotelDoc.class));
+        System.out.println(elasticsearchOperations.count(Query.findAll(), IndexCoordinates.of("hotel")));
     }
+
 }

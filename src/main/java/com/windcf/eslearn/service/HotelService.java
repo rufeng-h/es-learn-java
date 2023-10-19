@@ -11,4 +11,6 @@ public interface HotelService {
     Hotel get(long id);
 
     List<Hotel> list();
+
+    Integer loadEs();
 }
