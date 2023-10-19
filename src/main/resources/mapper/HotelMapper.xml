@@ -493,4 +493,10 @@
       </if>
     </trim>
   </insert>
+
+  <select id="list" resultMap="BaseResultMap">
+      SELECT
+      <include refid="Base_Column_List"/>
+      FROM tb_hotel
+  </select>
 </mapper>

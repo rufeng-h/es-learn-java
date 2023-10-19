@@ -61,4 +61,6 @@ public interface HotelMapper {
     int updateBatchSelective(List<Hotel> list);
 
     int batchInsert(@Param("list") List<Hotel> list);
+
+    List<Hotel> list();
 }

@@ -5,6 +5,8 @@ import com.windcf.eslearn.mapper.HotelMapper;
 import com.windcf.eslearn.service.HotelService;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * @author chunf
  */
@@ -19,5 +21,10 @@ public class HotelServiceImpl implements HotelService {
     @Override
     public Hotel get(long id) {
         return hotelMapper.selectByPrimaryKey(id);
+    }
+
+    @Override
+    public List<Hotel> list() {
+        return hotelMapper.list();
     }
 }

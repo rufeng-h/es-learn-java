@@ -2,6 +2,10 @@ server:
   port: 8000
 
 spring:
+  elasticsearch:
+    username: elastic
+    password: yq7UbfMeNNGkvFh2gBf_
+    uris: http://localhost:9200
   # spring email
   #  mail:
   #    username: chunfengh163@163.com
