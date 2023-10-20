@@ -42,7 +42,12 @@ public class HotelController {
     }
 
     @GetMapping("/findByAll")
-    public List<HotelDoc> searchAll(@NotEmpty String value){
-        return hotelRepository.findHotelDocByAll(value);
+    public List<HotelDoc> searchAll(@NotEmpty String value) {
+        return hotelRepository.findByAll(value);
+    }
+
+    @GetMapping("/findByName")
+    public List<HotelDoc> findByName(@NotEmpty String name) {
+        return hotelRepository.findByName(name);
     }
 }

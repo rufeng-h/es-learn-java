@@ -41,7 +41,7 @@ public class HotelDoc {
      * 由其他属性copy而来，主要用于搜索功能，不需要储存数据
      */
 //    @Field(type = FieldType.Text, analyzer = "ik_max_word", searchAnalyzer = "ik_smart", ignoreFields = "all", excludeFromSource = true)
-//    private String all;
+    private String all;
 
     public HotelDoc(Hotel hotel) {
         this.id = hotel.getId();
