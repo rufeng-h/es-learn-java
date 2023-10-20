@@ -17,7 +17,6 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.lang.NonNull;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,7 +26,7 @@ import java.util.stream.Collectors;
 /**
  * @author chunf
  */
-@Component
+//@Component
 public class AppReadyListener implements ApplicationListener<ApplicationReadyEvent> {
     private final Log logger = LogFactory.getLog(AppReadyListener.class);
     private final HotelService hotelService;
