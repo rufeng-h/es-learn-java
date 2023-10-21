@@ -6,12 +6,6 @@ spring:
     username: elastic
     password: yq7UbfMeNNGkvFh2gBf_
     uris: http://localhost:9200
-  # spring email
-  #  mail:
-  #    username: chunfengh163@163.com
-  #    host: smtp.163.com
-  #    password: OYZDLGLUUOLFGOEV
-  # datasource
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
@@ -40,4 +34,3 @@ mybatis:
     jdbc-type-for-null: null
     local-cache-scope: statement
   mapper-locations: classpath:/mapper/**/*.xml
-#  type-aliases-package: com.rufeng.healthman.pojo
