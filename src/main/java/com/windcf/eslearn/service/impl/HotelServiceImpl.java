@@ -47,11 +47,6 @@ public class HotelServiceImpl implements HotelService {
                         .withObject(doc).build())
                 .collect(Collectors.toList());
         List<IndexedObjectInformation> informations = elasticsearchOperations.bulkIndex(indexQueries, IndexCoordinates.of("hotel"));
-        IndexedObjectInformation information = informations.get(informations.size() - 1);
-        System.out.println(information.getVersion());
-        System.out.println(information.getId());
-        System.out.println(information.getPrimaryTerm());
-        System.out.println(information.getSeqNo());
         return informations.size();
     }
 }

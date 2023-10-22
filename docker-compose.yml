@@ -28,5 +28,20 @@ services:
     depends_on:
       - es
     restart: always
+  mysql:
+    image: mysql:8
+    container_name: mysql
+    networks:
+      - elastic
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./volumes/mysql/data:/var/lib/mysql
+      - ./volumes/mysql/conf:/etc/mysql/conf.d
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: es
+      TZ: Asia/Shanghai
+    restart: always
 networks:
   elastic:
