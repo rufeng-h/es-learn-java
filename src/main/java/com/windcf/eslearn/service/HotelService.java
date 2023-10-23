@@ -17,4 +17,6 @@ public interface HotelService {
     Integer loadEs();
 
     SearchResult search(SearchParam param);
+
+    boolean delIndex(String index);
 }

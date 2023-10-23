@@ -39,6 +39,9 @@ public class HotelDoc {
     @Field(type = FieldType.Keyword, index = false)
     private String pic;
 
+    @Field(type = FieldType.Boolean)
+    private Boolean ad;
+
     /**
      * 由其他属性copy而来，主要用于搜索功能，不需要储存数据
      */
@@ -62,5 +65,6 @@ public class HotelDoc {
         this.business = hotel.getBusiness();
         this.location = hotel.getLatitude() + ", " + hotel.getLongitude();
         this.pic = hotel.getPic();
+        this.ad = this.id % 3 == 0;
     }
 }

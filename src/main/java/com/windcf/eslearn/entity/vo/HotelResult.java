@@ -1,5 +1,6 @@
 package com.windcf.eslearn.entity.vo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.windcf.eslearn.entity.repository.HotelDoc;
 import lombok.Data;
 
@@ -61,9 +62,8 @@ public class HotelResult {
 
     private Double distance;
 
-    public HotelResult(HotelDoc hotel) {
-        this(hotel, null);
-    }
+    @JsonProperty("isAD")
+    private Boolean ad;
 
     public HotelResult(HotelDoc hotel, Double distance) {
         this.id = hotel.getId();
@@ -78,5 +78,6 @@ public class HotelResult {
         this.location = hotel.getLocation();
         this.pic = hotel.getPic();
         this.distance = distance;
+        this.ad = hotel.getAd();
     }
 }

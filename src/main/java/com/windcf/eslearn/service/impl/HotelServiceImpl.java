@@ -1,8 +1,6 @@
 package com.windcf.eslearn.service.impl;
 
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
-import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.json.JsonData;
 import com.windcf.eslearn.entity.model.Hotel;
 import com.windcf.eslearn.entity.param.SearchParam;
@@ -23,8 +21,8 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
@@ -56,6 +54,12 @@ public class HotelServiceImpl implements HotelService {
 
     @Override
     public Integer loadEs() {
+        IndexCoordinates indexCoordinates = IndexCoordinates.of("hotel");
+        boolean exists = elasticsearchOperations.indexOps(indexCoordinates).exists();
+        if (!exists) {
+            elasticsearchOperations.indexOps(indexCoordinates).createMapping(HotelDoc.class);
+        }
+
         List<Hotel> docs = this.list();
         List<IndexQuery> indexQueries = docs.stream().map(HotelDoc::new)
                 .map(doc -> new IndexQueryBuilder()
@@ -63,7 +67,7 @@ public class HotelServiceImpl implements HotelService {
                         .withId(doc.getId().toString())
                         .withObject(doc).build())
                 .collect(Collectors.toList());
-        List<IndexedObjectInformation> informations = elasticsearchOperations.bulkIndex(indexQueries, IndexCoordinates.of("hotel"));
+        List<IndexedObjectInformation> informations = elasticsearchOperations.bulkIndex(indexQueries, indexCoordinates);
         return informations.size();
     }
 
@@ -91,19 +95,47 @@ public class HotelServiceImpl implements HotelService {
             }
             queries.add(builder.build()._toQuery());
         }
-        Query query = QueryBuilders.bool().must(queries).build()._toQuery();
-        NativeQueryBuilder builder = new NativeQueryBuilder().withQuery(query).withPageable(pageRequest);
-        if (StringUtils.hasText(param.getLocation())) {
-            String[] s = param.getLocation().split(", ");
-            GeoPoint geoPoint = new GeoPoint(Double.parseDouble(s[1]), Double.parseDouble(s[0]));
-            builder.withSort(Sort.by(new GeoDistanceOrder("location", geoPoint).withUnit("km")));
-        }
+        Query functionFilter = QueryBuilders.term().field("ad").value(true).build()._toQuery();
+        Query boolQuery = QueryBuilders.bool().must(queries).build()._toQuery();
+
+        Query functionScore = QueryBuilders.functionScore(
+                b -> b.query(boolQuery).functions(
+                        b1 -> b1.filter(functionFilter).weight(5.0)).boostMode(FunctionBoostMode.Multiply));
+
+        NativeQueryBuilder builder = new NativeQueryBuilder()
+                .withSort(Sort.by(prepareOrders(param)))
+                .withQuery(functionScore)
+                .withPageable(pageRequest);
+
         SearchHits<HotelDoc> searchHits = elasticsearchOperations.search(builder.build(), HotelDoc.class);
         ArrayList<HotelResult> hotels = new ArrayList<>();
         for (SearchHit<HotelDoc> hit : searchHits.getSearchHits()) {
             List<Object> values = hit.getSortValues();
-            hotels.add(new HotelResult(hit.getContent(), values.isEmpty() ? null : Double.parseDouble((String) values.get(0))));
+            hotels.add(new HotelResult(hit.getContent(), Double.parseDouble((String) values.get(values.size() - 1))));
         }
         return new SearchResult(searchHits.getTotalHits(), hotels);
+    }
+
+    @Override
+    public boolean delIndex(String index) {
+        return elasticsearchOperations.indexOps(IndexCoordinates.of(index)).delete();
+    }
+
+    @NonNull
+    private List<Sort.Order> prepareOrders(SearchParam param) {
+        List<Sort.Order> orders = new ArrayList<>();
+        if (!StringUtils.hasText(param.getLocation())) {
+            throw new IllegalArgumentException("错误的参数：location");
+        }
+        if ("score".equals(param.getSortBy())) {
+            orders.add(Sort.Order.desc("score"));
+        }
+        if ("price".equals(param.getSortBy())) {
+            orders.add(Sort.Order.asc("price"));
+        }
+        String[] s = param.getLocation().split(", ");
+        GeoPoint geoPoint = new GeoPoint(Double.parseDouble(s[1]), Double.parseDouble(s[0]));
+        orders.add(new GeoDistanceOrder("location", geoPoint).withUnit("km").with(Sort.Direction.ASC));
+        return orders;
     }
 }

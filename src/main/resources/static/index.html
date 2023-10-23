@@ -193,7 +193,8 @@
                 filters: {}, // 过滤字段
             },
             map: {},// 地图对象
-            loc: "", // 地图标记
+            defaultLoc: "113.308645, 23.128031",
+            loc: "113.308645, 23.128031", // 地图标记
             ml: 0, // 控制地图位置
             geolocation: {}, // 定位系统
             loading: false, // 是否在定位
@@ -515,6 +516,9 @@
             },
             search(location) {
                 // 发送ajax
+                if (!location) {
+                    location = this.defaultLoc;
+                }
                 this.searchByMap(location);
 
             },
@@ -609,7 +613,7 @@
             },
             getGeoLoc() {
                 this.loading = true;
-                this.loc = "113.308645, 23.128031";
+                this.loc = this.defaultLoc;
                 this.addMaker('//a.amap.com/jsapi/static/image/plugin/point.png', 23.128031, 113.308645);
                 if (this.params.page !== 1) {
                     this.params.page = 1;

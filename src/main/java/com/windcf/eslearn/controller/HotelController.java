@@ -7,10 +7,7 @@ import com.windcf.eslearn.entity.vo.SearchResult;
 import com.windcf.eslearn.repository.HotelRepository;
 import com.windcf.eslearn.service.HotelService;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -58,5 +55,10 @@ public class HotelController {
     @GetMapping("/findByName")
     public List<HotelDoc> findByName(@NotEmpty String name) {
         return hotelRepository.findByName(name);
+    }
+
+    @DeleteMapping("/hotel")
+    public Boolean delHotelIndex() {
+        return hotelService.delIndex("hotel");
     }
 }
