@@ -1,5 +1,6 @@
-package com.windcf.eslearn.domain;
+package com.windcf.eslearn.entity.repository;
 
+import com.windcf.eslearn.entity.model.Hotel;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.*;

@@ -1,6 +1,8 @@
 package com.windcf.eslearn.service;
 
-import com.windcf.eslearn.domain.Hotel;
+import com.windcf.eslearn.entity.model.Hotel;
+import com.windcf.eslearn.entity.param.SearchParam;
+import com.windcf.eslearn.entity.vo.SearchResult;
 
 import java.util.List;
 
@@ -13,4 +15,6 @@ public interface HotelService {
     List<Hotel> list();
 
     Integer loadEs();
+
+    SearchResult search(SearchParam param);
 }

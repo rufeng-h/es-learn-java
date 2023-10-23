@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.windcf.eslearn.mapper.HotelMapper">
-  <resultMap id="BaseResultMap" type="com.windcf.eslearn.domain.Hotel">
+  <resultMap id="BaseResultMap" type="com.windcf.eslearn.entity.model.Hotel">
     <!--@mbg.generated-->
     <!--@Table tb_hotel-->
     <id column="id" jdbcType="BIGINT" property="id" />
@@ -34,7 +34,7 @@
     delete from tb_hotel
     where id = #{id,jdbcType=BIGINT}
   </delete>
-  <insert id="insert" parameterType="com.windcf.eslearn.domain.Hotel">
+  <insert id="insert" parameterType="com.windcf.eslearn.entity.model.Hotel">
     <!--@mbg.generated-->
     insert into tb_hotel (id, `name`, address, 
       price, score, brand, 
@@ -47,7 +47,7 @@
       #{latitude,jdbcType=VARCHAR}, #{longitude,jdbcType=VARCHAR}, #{pic,jdbcType=VARCHAR}
       )
   </insert>
-  <insert id="insertSelective" parameterType="com.windcf.eslearn.domain.Hotel">
+  <insert id="insertSelective" parameterType="com.windcf.eslearn.entity.model.Hotel">
     <!--@mbg.generated-->
     insert into tb_hotel
     <trim prefix="(" suffix=")" suffixOverrides=",">
@@ -127,7 +127,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.windcf.eslearn.domain.Hotel">
+  <update id="updateByPrimaryKeySelective" parameterType="com.windcf.eslearn.entity.model.Hotel">
     <!--@mbg.generated-->
     update tb_hotel
     <set>
@@ -167,7 +167,7 @@
     </set>
     where id = #{id,jdbcType=BIGINT}
   </update>
-  <update id="updateByPrimaryKey" parameterType="com.windcf.eslearn.domain.Hotel">
+  <update id="updateByPrimaryKey" parameterType="com.windcf.eslearn.entity.model.Hotel">
     <!--@mbg.generated-->
     update tb_hotel
     set `name` = #{name,jdbcType=VARCHAR},
@@ -349,7 +349,7 @@
         )
     </foreach>
   </insert>
-  <insert id="insertOrUpdate" parameterType="com.windcf.eslearn.domain.Hotel">
+  <insert id="insertOrUpdate" parameterType="com.windcf.eslearn.entity.model.Hotel">
     <!--@mbg.generated-->
     insert into tb_hotel
     (id, `name`, address, price, score, brand, city, star_name, business, latitude, longitude, 
@@ -373,7 +373,7 @@
     longitude = #{longitude,jdbcType=VARCHAR}, 
     pic = #{pic,jdbcType=VARCHAR}
   </insert>
-  <insert id="insertOrUpdateSelective" parameterType="com.windcf.eslearn.domain.Hotel">
+  <insert id="insertOrUpdateSelective" parameterType="com.windcf.eslearn.entity.model.Hotel">
     <!--@mbg.generated-->
     insert into tb_hotel
     <trim prefix="(" suffix=")" suffixOverrides=",">

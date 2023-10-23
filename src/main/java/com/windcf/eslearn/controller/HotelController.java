@@ -1,13 +1,15 @@
 package com.windcf.eslearn.controller;
 
-import com.windcf.eslearn.domain.Hotel;
-import com.windcf.eslearn.domain.HotelDoc;
+import com.windcf.eslearn.entity.model.Hotel;
+import com.windcf.eslearn.entity.param.SearchParam;
+import com.windcf.eslearn.entity.repository.HotelDoc;
+import com.windcf.eslearn.entity.vo.SearchResult;
 import com.windcf.eslearn.repository.HotelRepository;
 import com.windcf.eslearn.service.HotelService;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.constraints.NotEmpty;
@@ -41,6 +43,11 @@ public class HotelController {
     @GetMapping("/loadEs")
     public Integer loadEs() {
         return hotelService.loadEs();
+    }
+
+    @PostMapping("/hotel/list")
+    public SearchResult list(@RequestBody @Validated SearchParam param) {
+        return hotelService.search(param);
     }
 
     @GetMapping("/findByAll")

@@ -58,4 +58,11 @@ public class MyElasticsearchConfiguration extends ElasticsearchConfiguration {
         return new AutoCloseableElasticsearchClient(transport);
     }
 
+    /**
+     * not recommanded
+     */
+    @Override
+    protected boolean writeTypeHints() {
+        return false;
+    }
 }

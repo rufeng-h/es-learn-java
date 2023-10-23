@@ -14,6 +14,7 @@ services:
       - ./volumes/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
     environment:
       discovery.type: single-node
+      TZ: Asia/Shanghai
     restart: always
   kibana:
     image: kibana:8.3.2
@@ -22,6 +23,8 @@ services:
       - elastic
     ports:
       - "5601:5601"
+    environment:
+      TZ: Asia/Shanghai
     volumes:
       - ./volumes/kibana/data:/usr/share/kibana/data
       - ./volumes/kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml

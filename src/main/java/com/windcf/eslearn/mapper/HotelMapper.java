@@ -1,6 +1,6 @@
 package com.windcf.eslearn.mapper;
 
-import com.windcf.eslearn.domain.Hotel;
+import com.windcf.eslearn.entity.model.Hotel;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

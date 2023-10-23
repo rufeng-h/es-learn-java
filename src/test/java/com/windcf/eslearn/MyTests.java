@@ -9,12 +9,12 @@ import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import com.windcf.eslearn.domain.HotelDoc;
+import com.windcf.eslearn.entity.repository.HotelDoc;
+import com.windcf.eslearn.repository.HotelRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -44,6 +44,9 @@ class MyTests {
 
     @Autowired
     private ElasticsearchClient elasticsearchClient;
+
+    @Autowired
+    private HotelRepository hotelRepository;
 
     @Test
     void testMatchAll() throws IOException {
@@ -104,5 +107,16 @@ class MyTests {
                 System.out.println(entry.getKey() + " === " + String.join(", ", entry.getValue()));
             }
         }
+    }
+
+    @Test
+    void testSearch() {
+        PageRequest pageRequest = PageRequest.of(0, 5);
+        Page<HotelDoc> hotelDocs = hotelRepository.findByAllAndBrandAndCityAndStarNameAndPriceBetween(null, "如家", "深圳", null, 100, 300, pageRequest);
+        System.out.println(hotelDocs.getTotalElements());
+    }
+
+    @Test
+    void testSearch2() {
     }
 }
