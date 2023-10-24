@@ -50,7 +50,7 @@ public class HotelDoc {
 
     @NonNull
     @CompletionField(analyzer = "completion_analyzer")
-    private final Completion completion = new Completion();
+    private Completion completion;
 
     /**
      * 由其他属性copy而来，主要用于搜索功能，不需要储存数据
@@ -85,6 +85,7 @@ public class HotelDoc {
         } else {
             input.add(this.business);
         }
+        this.completion = new Completion();
         this.completion.setInput(input.toArray(new String[0]));
     }
 }

@@ -1,5 +1,6 @@
 package com.windcf.eslearn.service.impl;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
@@ -8,6 +9,11 @@ import co.elastic.clients.elasticsearch._types.query_dsl.FunctionBoostMode;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.search.CompletionSuggester;
+import co.elastic.clients.elasticsearch.core.search.Suggester;
+import co.elastic.clients.elasticsearch.core.search.Suggestion;
 import co.elastic.clients.json.JsonData;
 import com.windcf.eslearn.entity.model.Hotel;
 import com.windcf.eslearn.entity.param.SearchParam;
@@ -16,8 +22,6 @@ import com.windcf.eslearn.entity.vo.HotelResult;
 import com.windcf.eslearn.entity.vo.SearchResult;
 import com.windcf.eslearn.mapper.HotelMapper;
 import com.windcf.eslearn.service.HotelService;
-import org.elasticsearch.search.suggest.SuggestBuilder;
-import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
@@ -28,15 +32,15 @@ import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -47,9 +51,13 @@ public class HotelServiceImpl implements HotelService {
     private final HotelMapper hotelMapper;
     private final ElasticsearchOperations elasticsearchOperations;
 
-    public HotelServiceImpl(HotelMapper hotelMapper, ElasticsearchOperations elasticsearchOperations) {
+    private final ElasticsearchClient elasticsearchClient;
+
+
+    public HotelServiceImpl(HotelMapper hotelMapper, ElasticsearchOperations elasticsearchOperations, ElasticsearchClient elasticsearchClient) {
         this.hotelMapper = hotelMapper;
         this.elasticsearchOperations = elasticsearchOperations;
+        this.elasticsearchClient = elasticsearchClient;
     }
 
     @Override
@@ -133,15 +141,19 @@ public class HotelServiceImpl implements HotelService {
 
     @Override
     public List<String> suggestion(String key) {
-        CompletionSuggestionBuilder suggestionBuilder = new CompletionSuggestionBuilder("completion")
-                .skipDuplicates(true)
-                .size(10)
-                .text(key);
-        SuggestBuilder suggestion = new SuggestBuilder().addSuggestion("title", suggestionBuilder);
-        NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withSuggestBuilder(suggestion).build();
-        SearchHits<HotelDoc> searchHits = elasticsearchOperations.search(searchQuery, HotelDoc.class);
-        searchHits.getSuggest().getSuggestion("title");
-        return null;
+        CompletionSuggester completionSuggester = CompletionSuggester.of(b -> b.field("completion").skipDuplicates(true).size(10));
+        Suggester suggester = Suggester.of(b -> b.suggesters("title", builder -> builder.text(key).completion(completionSuggester)));
+        SearchRequest searchRequest = SearchRequest.of(b -> b.suggest(suggester));
+        try {
+            SearchResponse<HotelDoc> searchResponse = elasticsearchClient.search(searchRequest, HotelDoc.class);
+            Suggestion<HotelDoc> docSuggestion = searchResponse.suggest().get("title").get(0);
+            return docSuggestion.completion().options().stream().map(o -> {
+                assert o.source() != null;
+                return o.source().getCompletion().getInput();
+            }).flatMap(Arrays::stream).collect(Collectors.toList());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private NativeQueryBuilder buildQueryBuilder(SearchParam param) {
@@ -183,6 +195,7 @@ public class HotelServiceImpl implements HotelService {
     @NonNull
     private List<Sort.Order> prepareOrders(SearchParam param) {
         List<Sort.Order> orders = new ArrayList<>();
+        // TODO 导致价格、评分排序出现问题
         orders.add(Sort.Order.desc("_score"));
         if ("score".equals(param.getSortBy())) {
             orders.add(Sort.Order.desc("score"));
