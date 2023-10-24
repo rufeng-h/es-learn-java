@@ -11,6 +11,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.UpdateRequest;
 import co.elastic.clients.elasticsearch.core.search.CompletionSuggester;
 import co.elastic.clients.elasticsearch.core.search.Suggester;
 import co.elastic.clients.elasticsearch.core.search.Suggestion;
@@ -151,6 +152,25 @@ public class HotelServiceImpl implements HotelService {
                 assert o.source() != null;
                 return o.source().getCompletion().getInput();
             }).flatMap(Arrays::stream).collect(Collectors.toList());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void delById(Long id) {
+        elasticsearchOperations.delete(String.valueOf(id), HotelDoc.class);
+    }
+
+    @Override
+    public void updateById(Long id) {
+        Hotel hotel = hotelMapper.selectByPrimaryKey(id);
+        IndexCoordinates indexCoordinates = elasticsearchOperations.indexOps(HotelDoc.class).getIndexCoordinates();
+        HotelDoc hotelDoc = new HotelDoc(hotel);
+        UpdateRequest<Object, Object> updateRequest = UpdateRequest.of(b -> b.id(id.toString()).doc(hotelDoc).index(indexCoordinates.getIndexName()));
+        try {
+            elasticsearchClient.update(updateRequest, HotelService.class);
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

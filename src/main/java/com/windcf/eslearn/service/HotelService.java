@@ -24,4 +24,8 @@ public interface HotelService {
     Map<String, List<String>> filter(SearchParam param);
 
     List<String> suggestion(String key);
+
+    void delById(Long id);
+
+    void updateById(Long id);
 }
