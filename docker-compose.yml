@@ -46,5 +46,21 @@ services:
       MYSQL_DATABASE: es
       TZ: Asia/Shanghai
     restart: always
+  ampq:
+    image: rabbitmq:3-management
+    container_name: ampq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - elastic
+    volumes:
+      - ./volumes/ampq/data:/var/lib/rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: elastic
+      RABBITMQ_DEFAULT_PASS: yq7UbfMeNNGkvFh2gBf_
+      RABBITMQ_DEFAULT_VHOST: /
+      TZ: Asia/Shanghai
+    restart: always
 networks:
   elastic:
