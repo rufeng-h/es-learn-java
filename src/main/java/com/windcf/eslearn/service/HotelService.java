@@ -5,6 +5,7 @@ import com.windcf.eslearn.entity.param.SearchParam;
 import com.windcf.eslearn.entity.vo.SearchResult;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author chunf
@@ -19,4 +20,6 @@ public interface HotelService {
     SearchResult search(SearchParam param);
 
     boolean delIndex(String index);
+
+    Map<String, List<String>> filter(SearchParam param);
 }

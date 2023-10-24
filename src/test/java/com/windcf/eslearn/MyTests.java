@@ -4,19 +4,28 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOptionsBuilders;
 import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.aggregations.*;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
+import co.elastic.clients.json.JsonData;
+import co.elastic.clients.util.NamedValue;
+import com.windcf.eslearn.entity.param.SearchParam;
 import com.windcf.eslearn.entity.repository.HotelDoc;
 import com.windcf.eslearn.repository.HotelRepository;
+import com.windcf.eslearn.service.HotelService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
+import org.springframework.data.elasticsearch.core.AggregationsContainer;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -47,6 +56,15 @@ class MyTests {
 
     @Autowired
     private HotelRepository hotelRepository;
+
+    @Autowired
+    private HotelService hotelService;
+
+    @Test
+    void testHotelService() {
+        SearchParam param = new SearchParam();
+        hotelService.filter(param);
+    }
 
     @Test
     void testMatchAll() throws IOException {
@@ -117,6 +135,53 @@ class MyTests {
     }
 
     @Test
-    void testSearch2() {
+    void testBucketAgg() {
+        Aggregation terms = AggregationBuilders.terms(builder -> builder.field("brand")
+                .order(List.of(NamedValue.of("_count", SortOrder.Asc)))
+                .size(20));
+        NativeQuery nativeQuery = new NativeQueryBuilder()
+                .withQuery(QueryBuilders.range(b -> b.field("price").lte(JsonData.of(200))))
+                .withAggregation("brandAgg", terms)
+                .build();
+        nativeQuery.setMaxResults(0);
+        SearchHits<HotelDoc> searchHits = elasticsearchOperations.search(nativeQuery, HotelDoc.class);
+
+        @SuppressWarnings("unchecked") AggregationsContainer<List<ElasticsearchAggregation>> aggregations = (AggregationsContainer<List<ElasticsearchAggregation>>) searchHits.getAggregations();
+        assert aggregations != null;
+        System.out.println(aggregations.getClass());
+        for (ElasticsearchAggregation aggregation : aggregations.aggregations()) {
+            Aggregate aggregate = aggregation.aggregation().getAggregate();
+            List<StringTermsBucket> stringTermsBuckets = aggregate.sterms().buckets().array();
+            for (StringTermsBucket bucket : stringTermsBuckets) {
+                System.out.println(bucket.key().stringValue() + ": " + bucket.docCount());
+            }
+        }
+
+    }
+
+    /**
+     * 子聚合
+     */
+    @Test
+    void testMetricAgg() {
+        Aggregation statsAggregation = AggregationBuilders.stats().field("score").build()._toAggregation();
+        Aggregation terms = new Aggregation.Builder().aggregations("scoreStat", statsAggregation).terms(builder -> builder.field("brand")
+                .order(List.of(NamedValue.of("_count", SortOrder.Asc)))
+                .size(20)).build();
+
+        NativeQuery nativeQuery = new NativeQueryBuilder()
+                .withAggregation("brandAgg", terms)
+                .build();
+        nativeQuery.setMaxResults(0);
+        SearchHits<HotelDoc> searchHits = elasticsearchOperations.search(nativeQuery, HotelDoc.class);
+        @SuppressWarnings("unchecked") AggregationsContainer<List<ElasticsearchAggregation>> aggregations = (AggregationsContainer<List<ElasticsearchAggregation>>) searchHits.getAggregations();
+        assert aggregations != null;
+        for (ElasticsearchAggregation aggregation : aggregations.aggregations()) {
+            StringTermsAggregate sterms = aggregation.aggregation().getAggregate().sterms();
+            List<StringTermsBucket> termsBuckets = sterms.buckets().array();
+            for (StringTermsBucket bucket : termsBuckets) {
+                System.out.println(bucket);
+            }
+        }
     }
 }

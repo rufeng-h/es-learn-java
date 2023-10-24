@@ -1,5 +1,9 @@
 package com.windcf.eslearn.service.impl;
 
+import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
+import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
+import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
 import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.json.JsonData;
 import com.windcf.eslearn.entity.model.Hotel;
@@ -11,11 +15,10 @@ import com.windcf.eslearn.mapper.HotelMapper;
 import com.windcf.eslearn.service.HotelService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
+import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.IndexedObjectInformation;
-import org.springframework.data.elasticsearch.core.SearchHit;
-import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.*;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
@@ -26,7 +29,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -78,6 +83,54 @@ public class HotelServiceImpl implements HotelService {
 
     @Override
     public SearchResult search(SearchParam param) {
+        SearchHits<HotelDoc> searchHits = elasticsearchOperations.search(buildQueryBuilder(param).build(), HotelDoc.class);
+        ArrayList<HotelResult> hotels = new ArrayList<>();
+        for (SearchHit<HotelDoc> hit : searchHits.getSearchHits()) {
+            List<Object> values = hit.getSortValues();
+            hotels.add(new HotelResult(hit.getContent(), Double.parseDouble((String) values.get(values.size() - 1))));
+        }
+        return new SearchResult(searchHits.getTotalHits(), hotels);
+    }
+
+    @Override
+    public boolean delIndex(String index) {
+        return elasticsearchOperations.indexOps(IndexCoordinates.of(index)).delete();
+    }
+
+    @Override
+    public Map<String, List<String>> filter(SearchParam param) {
+        NativeQueryBuilder builder = buildQueryBuilder(param);
+        Aggregation city = new Aggregation.Builder().terms(b -> b.field("city")).build();
+        Aggregation starName = new Aggregation.Builder().terms(b -> b.field("starName")).build();
+        Aggregation brand = new Aggregation.Builder().terms(b -> b.field("brand")).build();
+//        Aggregation maxPrice = new Aggregation.Builder().max(b -> b.field("price")).build();
+//        Aggregation minPrice = new Aggregation.Builder().min(b -> b.field("price")).build();
+
+        NativeQuery nativeQuery = builder.withAggregation("city", city)
+                .withAggregation("starName", starName)
+                .withAggregation("brand", brand)
+//                .withAggregation("minPrice", minPrice)
+//                .withAggregation("maxPrice", maxPrice);
+                .build();
+        nativeQuery.setMaxResults(0);
+        SearchHits<HotelDoc> searchHits = elasticsearchOperations.search(nativeQuery, HotelDoc.class);
+        @SuppressWarnings("unchecked") AggregationsContainer<List<ElasticsearchAggregation>> aggregations = (AggregationsContainer<List<ElasticsearchAggregation>>) searchHits.getAggregations();
+        if (aggregations == null) {
+            throw new IllegalStateException("未知错误");
+        }
+        Map<String, List<String>> map = new HashMap<>();
+        List<ElasticsearchAggregation> aggregationList = aggregations.aggregations();
+        for (ElasticsearchAggregation aggregation : aggregationList) {
+            String name = aggregation.aggregation().getName();
+            Aggregate aggregate = aggregation.aggregation().getAggregate();
+            List<StringTermsBucket> buckets = aggregate.sterms().buckets().array();
+            List<String> items = buckets.stream().map(StringTermsBucket::key).map(FieldValue::stringValue).collect(Collectors.toList());
+            map.put(name, items);
+        }
+        return map;
+    }
+
+    private NativeQueryBuilder buildQueryBuilder(SearchParam param) {
         PageRequest pageRequest = PageRequest.of(param.getPage() - 1, param.getSize());
         String searchKey = param.getKey();
         List<Query> queries = new ArrayList<>();
@@ -107,41 +160,27 @@ public class HotelServiceImpl implements HotelService {
                 b -> b.query(boolQuery).functions(
                         b1 -> b1.filter(functionFilter).weight(10.0)).boostMode(FunctionBoostMode.Multiply));
 
-        NativeQueryBuilder builder = new NativeQueryBuilder()
+        return new NativeQueryBuilder()
                 .withSort(Sort.by(prepareOrders(param)))
                 .withQuery(functionScore)
                 .withPageable(pageRequest);
-
-        SearchHits<HotelDoc> searchHits = elasticsearchOperations.search(builder.build(), HotelDoc.class);
-        ArrayList<HotelResult> hotels = new ArrayList<>();
-        for (SearchHit<HotelDoc> hit : searchHits.getSearchHits()) {
-            List<Object> values = hit.getSortValues();
-            hotels.add(new HotelResult(hit.getContent(), Double.parseDouble((String) values.get(values.size() - 1))));
-        }
-        return new SearchResult(searchHits.getTotalHits(), hotels);
-    }
-
-    @Override
-    public boolean delIndex(String index) {
-        return elasticsearchOperations.indexOps(IndexCoordinates.of(index)).delete();
     }
 
     @NonNull
     private List<Sort.Order> prepareOrders(SearchParam param) {
         List<Sort.Order> orders = new ArrayList<>();
         orders.add(Sort.Order.desc("_score"));
-        if (!StringUtils.hasText(param.getLocation())) {
-            throw new IllegalArgumentException("错误的参数：location");
-        }
         if ("score".equals(param.getSortBy())) {
             orders.add(Sort.Order.desc("score"));
         }
         if ("price".equals(param.getSortBy())) {
             orders.add(Sort.Order.asc("price"));
         }
-        String[] s = param.getLocation().split(", ");
-        GeoPoint geoPoint = new GeoPoint(Double.parseDouble(s[1]), Double.parseDouble(s[0]));
-        orders.add(new GeoDistanceOrder("location", geoPoint).withUnit("km").with(Sort.Direction.ASC));
+        if (StringUtils.hasText(param.getLocation())) {
+            String[] s = param.getLocation().split(", ");
+            GeoPoint geoPoint = new GeoPoint(Double.parseDouble(s[1]), Double.parseDouble(s[0]));
+            orders.add(new GeoDistanceOrder("location", geoPoint).withUnit("km").with(Sort.Direction.ASC));
+        }
         return orders;
     }
 }
