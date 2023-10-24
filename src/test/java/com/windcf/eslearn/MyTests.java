@@ -9,13 +9,20 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.search.CompletionSuggester;
 import co.elastic.clients.elasticsearch.core.search.Hit;
+import co.elastic.clients.elasticsearch.core.search.Suggester;
+import co.elastic.clients.elasticsearch.core.search.Suggestion;
+import co.elastic.clients.elasticsearch.indices.AnalyzeRequest;
+import co.elastic.clients.elasticsearch.indices.AnalyzeResponse;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.util.NamedValue;
 import com.windcf.eslearn.entity.param.SearchParam;
 import com.windcf.eslearn.entity.repository.HotelDoc;
 import com.windcf.eslearn.repository.HotelRepository;
 import com.windcf.eslearn.service.HotelService;
+import org.elasticsearch.search.suggest.SuggestBuilder;
+import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,13 +30,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.core.AggregationsContainer;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.index.Settings;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.HighlightQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.highlight.Highlight;
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightField;
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightFieldParameters;
@@ -65,6 +78,43 @@ class MyTests {
         SearchParam param = new SearchParam();
         hotelService.filter(param);
     }
+
+    @Test
+    void testCreateIndex() {
+        IndexCoordinates indexCoordinates = IndexCoordinates.of("hotel");
+        Settings settings = elasticsearchOperations.indexOps(indexCoordinates).createSettings(HotelDoc.class);
+        Document mapping = elasticsearchOperations.indexOps(indexCoordinates).createMapping(HotelDoc.class);
+        elasticsearchOperations.indexOps(indexCoordinates).create(settings, mapping);
+
+    }
+
+    @Test
+    void testSuggest() {
+        CompletionSuggestionBuilder suggestionBuilder = new CompletionSuggestionBuilder("completion")
+                .skipDuplicates(true)
+                .size(10)
+                .text("ru");
+        SuggestBuilder suggestion = new SuggestBuilder().addSuggestion("title", suggestionBuilder);
+        NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withSuggestBuilder(suggestion).build();
+        SearchHits<HotelDoc> searchHits = elasticsearchOperations.search(searchQuery, HotelDoc.class);
+    }
+
+    @Test
+    void testNewSuggest() throws IOException {
+        CompletionSuggester completionSuggester = CompletionSuggester.of(b -> b.field("completion").skipDuplicates(true).size(10));
+        Suggester suggester = Suggester.of(b -> b.suggesters("title", builder -> builder.text("ru").completion(completionSuggester)));
+        NativeQuery nativeQuery = new NativeQueryBuilder().withSuggester(suggester).build();
+
+        // TODO BUG
+        SearchHits<HotelDoc> searchHits = elasticsearchOperations.search(nativeQuery, HotelDoc.class);
+        System.out.println(searchHits.getSuggest());
+
+        SearchRequest searchRequest = SearchRequest.of(b -> b.suggest(suggester));
+        SearchResponse<HotelDoc> searchResponse = elasticsearchClient.search(searchRequest, HotelDoc.class);
+        Map<String, List<Suggestion<HotelDoc>>> suggest = searchResponse.suggest();
+        System.out.println(suggest.get("title"));
+    }
+
 
     @Test
     void testMatchAll() throws IOException {
@@ -183,5 +233,16 @@ class MyTests {
                 System.out.println(bucket);
             }
         }
+    }
+
+    @Test
+    void testAnalyzer() throws IOException {
+        AnalyzeRequest analyzeRequest = new AnalyzeRequest.Builder().analyzer("pinyin").text("如家酒店真不错").build();
+        AnalyzeResponse analyzeResponse = elasticsearchClient.indices().analyze(analyzeRequest);
+        System.out.println(analyzeResponse.tokens());
+
+        ElasticsearchTemplate elasticsearchTemplate = (ElasticsearchTemplate) elasticsearchOperations;
+        AnalyzeResponse response = elasticsearchTemplate.execute(client -> client.indices().analyze(analyzeRequest));
+        System.out.println(response.tokens());
     }
 }

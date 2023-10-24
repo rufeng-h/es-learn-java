@@ -4,7 +4,10 @@ import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
-import co.elastic.clients.elasticsearch._types.query_dsl.*;
+import co.elastic.clients.elasticsearch._types.query_dsl.FunctionBoostMode;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
+import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
 import co.elastic.clients.json.JsonData;
 import com.windcf.eslearn.entity.model.Hotel;
 import com.windcf.eslearn.entity.param.SearchParam;
@@ -13,17 +16,19 @@ import com.windcf.eslearn.entity.vo.HotelResult;
 import com.windcf.eslearn.entity.vo.SearchResult;
 import com.windcf.eslearn.mapper.HotelMapper;
 import com.windcf.eslearn.service.HotelService;
+import org.elasticsearch.search.suggest.SuggestBuilder;
+import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.core.*;
+import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
-import org.springframework.data.elasticsearch.core.query.IndexQuery;
-import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -61,19 +66,19 @@ public class HotelServiceImpl implements HotelService {
     public Integer loadEs() {
         IndexCoordinates indexCoordinates = IndexCoordinates.of("hotel");
         boolean exists = elasticsearchOperations.indexOps(indexCoordinates).exists();
-        if (!exists) {
-            elasticsearchOperations.indexOps(indexCoordinates).createMapping(HotelDoc.class);
-        } else {
-            long count = elasticsearchOperations.count(new NativeQueryBuilder().withQuery(QueryBuilders.matchAll().build()._toQuery()).build(), indexCoordinates);
-            if (count != 0) {
-                return 0;
-            }
+        if (exists && elasticsearchOperations.count(new NativeQueryBuilder().withQuery(QueryBuilders.matchAll().build()._toQuery()).build(), indexCoordinates) != 0) {
+            return 0;
+        }
+        Settings settings = elasticsearchOperations.indexOps(indexCoordinates).createSettings(HotelDoc.class);
+        Document mapping = elasticsearchOperations.indexOps(indexCoordinates).createMapping(HotelDoc.class);
+        if (!elasticsearchOperations.indexOps(indexCoordinates).create(settings, mapping)) {
+            throw new IllegalStateException("创建索引失败");
         }
 
         List<Hotel> docs = this.list();
         List<IndexQuery> indexQueries = docs.stream().map(HotelDoc::new)
                 .map(doc -> new IndexQueryBuilder()
-                        .withIndex("hotel")
+                        .withIndex(indexCoordinates.getIndexName())
                         .withId(doc.getId().toString())
                         .withObject(doc).build())
                 .collect(Collectors.toList());
@@ -103,14 +108,10 @@ public class HotelServiceImpl implements HotelService {
         Aggregation city = new Aggregation.Builder().terms(b -> b.field("city")).build();
         Aggregation starName = new Aggregation.Builder().terms(b -> b.field("starName")).build();
         Aggregation brand = new Aggregation.Builder().terms(b -> b.field("brand")).build();
-//        Aggregation maxPrice = new Aggregation.Builder().max(b -> b.field("price")).build();
-//        Aggregation minPrice = new Aggregation.Builder().min(b -> b.field("price")).build();
 
         NativeQuery nativeQuery = builder.withAggregation("city", city)
                 .withAggregation("starName", starName)
                 .withAggregation("brand", brand)
-//                .withAggregation("minPrice", minPrice)
-//                .withAggregation("maxPrice", maxPrice);
                 .build();
         nativeQuery.setMaxResults(0);
         SearchHits<HotelDoc> searchHits = elasticsearchOperations.search(nativeQuery, HotelDoc.class);
@@ -118,7 +119,7 @@ public class HotelServiceImpl implements HotelService {
         if (aggregations == null) {
             throw new IllegalStateException("未知错误");
         }
-        Map<String, List<String>> map = new HashMap<>();
+        Map<String, List<String>> map = new HashMap<>(4);
         List<ElasticsearchAggregation> aggregationList = aggregations.aggregations();
         for (ElasticsearchAggregation aggregation : aggregationList) {
             String name = aggregation.aggregation().getName();
@@ -128,6 +129,19 @@ public class HotelServiceImpl implements HotelService {
             map.put(name, items);
         }
         return map;
+    }
+
+    @Override
+    public List<String> suggestion(String key) {
+        CompletionSuggestionBuilder suggestionBuilder = new CompletionSuggestionBuilder("completion")
+                .skipDuplicates(true)
+                .size(10)
+                .text(key);
+        SuggestBuilder suggestion = new SuggestBuilder().addSuggestion("title", suggestionBuilder);
+        NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withSuggestBuilder(suggestion).build();
+        SearchHits<HotelDoc> searchHits = elasticsearchOperations.search(searchQuery, HotelDoc.class);
+        searchHits.getSuggest().getSuggestion("title");
+        return null;
     }
 
     private NativeQueryBuilder buildQueryBuilder(SearchParam param) {

@@ -5,9 +5,9 @@ logging:
     # 打印query dsl
     org.springframework.data.elasticsearch: TRACE
     sql: DEBUG
-mybatis:
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#mybatis:
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 springdoc:
   swagger-ui:
     enabled: true

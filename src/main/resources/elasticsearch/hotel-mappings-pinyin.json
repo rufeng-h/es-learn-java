@@ -5,7 +5,8 @@
     },
     "name": {
       "type": "text",
-      "analyzer": "ik_max_word",
+      "analyzer": "text_analyzer",
+      "search_analyzer": "ik_smart",
       "copy_to": "all"
     },
     "address": {
@@ -23,14 +24,14 @@
       "copy_to": "all"
     },
     "city": {
-      "type": "keyword",
-      "copy_to": "all"
+      "type": "keyword"
     },
     "starName": {
       "type": "keyword"
     },
     "business": {
-      "type": "keyword"
+      "type": "keyword",
+      "copy_to": "all"
     },
     "location": {
       "type": "geo_point"
@@ -41,7 +42,12 @@
     },
     "all": {
       "type": "text",
-      "analyzer": "ik_max_word"
+      "analyzer": "text_analyzer",
+      "search_analyzer": "ik_smart"
+    },
+    "suggestion": {
+      "type": "completion",
+      "analyzer": "completion_analyzer"
     }
   }
 }

@@ -1,0 +1,55 @@
+{
+  "properties": {
+    "all": {
+      "type": "text",
+      "analyzer": "ik_max_word",
+      "search_analyzer": "ik_smart"
+    },
+    "score": {
+      "type": "integer"
+    },
+    "address": {
+      "type": "keyword",
+      "index": false
+    },
+    "ad": {
+      "type": "boolean"
+    },
+    "business": {
+      "type": "keyword",
+      "copy_to": [
+        "all"
+      ]
+    },
+    "city": {
+      "type": "keyword"
+    },
+    "price": {
+      "type": "integer"
+    },
+    "starName": {
+      "type": "keyword"
+    },
+    "name": {
+      "type": "text",
+      "copy_to": [
+        "all"
+      ],
+      "analyzer": "ik_max_word",
+      "search_analyzer": "ik_smart"
+    },
+    "location": {
+      "type": "geo_point"
+    },
+    "pic": {
+      "type": "keyword",
+      "index": false
+    },
+    "brand": {
+      "type": "keyword",
+      "copy_to": [
+        "all"
+      ]
+    }
+  }
+}

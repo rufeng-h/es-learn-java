@@ -21,7 +21,7 @@
         <dependency>
             <groupId>co.elastic.clients</groupId>
             <artifactId>elasticsearch-java</artifactId>
-            <version>8.10.0</version>
+            <version>8.7.1</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/jakarta.json/jakarta.json-api -->
         <dependency>

@@ -45,7 +45,7 @@ public class AppReadyListener implements ApplicationListener<ApplicationReadyEve
         try {
             exists = esClient.indices().exists(ExistsRequest.of(builder -> builder.index("hotel"))).value();
             if (!exists) {
-                InputStream inputStream = resolver.getResource("classpath:/hotel.json").getInputStream();
+                InputStream inputStream = resolver.getResource("classpath:/hotel-mappings.json").getInputStream();
                 CreateIndexRequest indexRequest = CreateIndexRequest.of(b -> b.index("hotel").mappings(TypeMapping.of(b1 -> b1.withJson(inputStream))));
                 esClient.indices().create(indexRequest);
                 logger.info("create index hotel!");

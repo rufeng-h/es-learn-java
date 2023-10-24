@@ -9,6 +9,7 @@ import com.windcf.eslearn.service.HotelService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -41,6 +42,11 @@ public class HotelController {
     @GetMapping("/loadEs")
     public Integer loadEs() {
         return hotelService.loadEs();
+    }
+
+    @GetMapping("/hotel/suggestion")
+    public List<String> suggestion(@NotBlank String key) {
+        return hotelService.suggestion(key);
     }
 
     @PostMapping("/hotel/list")
