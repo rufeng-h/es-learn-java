@@ -58,6 +58,11 @@ public class HotelServiceImpl implements HotelService {
         boolean exists = elasticsearchOperations.indexOps(indexCoordinates).exists();
         if (!exists) {
             elasticsearchOperations.indexOps(indexCoordinates).createMapping(HotelDoc.class);
+        } else {
+            long count = elasticsearchOperations.count(new NativeQueryBuilder().withQuery(QueryBuilders.matchAll().build()._toQuery()).build(), indexCoordinates);
+            if (count != 0) {
+                return 0;
+            }
         }
 
         List<Hotel> docs = this.list();
@@ -100,7 +105,7 @@ public class HotelServiceImpl implements HotelService {
 
         Query functionScore = QueryBuilders.functionScore(
                 b -> b.query(boolQuery).functions(
-                        b1 -> b1.filter(functionFilter).weight(5.0)).boostMode(FunctionBoostMode.Multiply));
+                        b1 -> b1.filter(functionFilter).weight(10.0)).boostMode(FunctionBoostMode.Multiply));
 
         NativeQueryBuilder builder = new NativeQueryBuilder()
                 .withSort(Sort.by(prepareOrders(param)))
@@ -124,6 +129,7 @@ public class HotelServiceImpl implements HotelService {
     @NonNull
     private List<Sort.Order> prepareOrders(SearchParam param) {
         List<Sort.Order> orders = new ArrayList<>();
+        orders.add(Sort.Order.desc("_score"));
         if (!StringUtils.hasText(param.getLocation())) {
             throw new IllegalArgumentException("错误的参数：location");
         }
