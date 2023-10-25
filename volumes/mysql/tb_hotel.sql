@@ -3,15 +3,15 @@
 
  Source Server         : local
  Source Server Type    : MySQL
- Source Server Version : 50622
+ Source Server Version : 80100
  Source Host           : localhost:3306
- Source Schema         : heima
+ Source Schema         : es
 
  Target Server Type    : MySQL
- Target Server Version : 50622
+ Target Server Version : 80100
  File Encoding         : 65001
 
- Date: 06/05/2021 18:31:05
+ Date: 25/10/2023 09:38:38
 */
 
 SET NAMES utf8mb4;
@@ -22,11 +22,11 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ----------------------------
 DROP TABLE IF EXISTS `tb_hotel`;
 CREATE TABLE `tb_hotel`  (
-  `id` bigint(20) NOT NULL COMMENT '酒店id',
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '酒店id',
   `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '酒店名称',
   `address` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '酒店地址',
-  `price` int(10) NOT NULL COMMENT '酒店价格',
-  `score` int(2) NOT NULL COMMENT '酒店评分',
+  `price` int NOT NULL COMMENT '酒店价格',
+  `score` int NOT NULL COMMENT '酒店评分',
   `brand` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '酒店品牌',
   `city` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '所在城市',
   `star_name` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '酒店星级，1星到5星，1钻到5钻',
@@ -35,13 +35,13 @@ CREATE TABLE `tb_hotel`  (
   `longitude` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '经度',
   `pic` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '酒店图片',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 2062643513 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = COMPACT;
 
 -- ----------------------------
 -- Records of tb_hotel
 -- ----------------------------
 INSERT INTO `tb_hotel` VALUES (36934, '7天连锁酒店(上海宝山路地铁站店)', '静安交通路40号', 336, 37, '7天酒店', '上海', '二钻', '四川北路商业区', '31.251433', '121.47522', 'https://m.tuniucdn.com/fb2/t1/G1/M00/3E/40/Cii9EVkyLrKIXo1vAAHgrxo_pUcAALcKQLD688AAeDH564_w200_h200_c1_t0.jpg');
-INSERT INTO `tb_hotel` VALUES (38609, '速8酒店(上海赤峰路店)', '广灵二路126号', 249, 35, '速8', '上海', '二钻', '四川北路商业区', '31.282444', '121.479385', 'https://m.tuniucdn.com/fb2/t1/G2/M00/DF/96/Cii-TFkx0ImIQZeiAAITil0LM7cAALCYwKXHQ4AAhOi377_w200_h200_c1_t0.jpg');
+INSERT INTO `tb_hotel` VALUES (38609, '速8酒店(上海赤峰路店)', '广灵二路126号', 251, 35, '速8', '上海', '二钻', '四川北路商业区', '31.282444', '121.479385', 'https://m.tuniucdn.com/fb2/t1/G2/M00/DF/96/Cii-TFkx0ImIQZeiAAITil0LM7cAALCYwKXHQ4AAhOi377_w200_h200_c1_t0.jpg');
 INSERT INTO `tb_hotel` VALUES (38665, '速8酒店上海中山北路兰田路店', '兰田路38号', 226, 35, '速8', '上海', '二钻', '长风公园地区', '31.244288', '121.422419', 'https://m.tuniucdn.com/fb2/t1/G2/M00/EF/86/Cii-Tlk2mV2IMZ-_AAEucgG3dx4AALaawEjiycAAS6K083_w200_h200_c1_t0.jpg');
 INSERT INTO `tb_hotel` VALUES (38812, '7天连锁酒店(上海漕溪路地铁站店)', '徐汇龙华西路315弄58号', 298, 37, '7天酒店', '上海', '二钻', '八万人体育场地区', '31.174377', '121.442875', 'https://m.tuniucdn.com/fb2/t1/G2/M00/E0/0E/Cii-TlkyIr2IEWNoAAHQYv7i5CkAALD-QP2iJwAAdB6245_w200_h200_c1_t0.jpg');
 INSERT INTO `tb_hotel` VALUES (39106, '7天连锁酒店（上海莘庄地铁站店）', '闵行莘庄镇七莘路299号', 348, 41, '7天酒店', '上海', '二钻', '莘庄工业区', '31.113812', '121.375869', 'https://m.tuniucdn.com/fb2/t1/G2/M00/D8/11/Cii-T1ku2zGIGR7uAAF1NYY9clwAAKxZAHO8HgAAXVN368_w200_h200_c1_t0.jpg');
@@ -215,7 +215,7 @@ INSERT INTO `tb_hotel` VALUES (1931602865, '深圳联投东方万怡酒店', '�
 INSERT INTO `tb_hotel` VALUES (1937347815, '北京望京凯悦酒店', '广顺南大街8号院2号楼', 617, 46, '凯悦', '北京', '五钻', '望京/酒仙桥/798地区', '39.991546', '116.476288', 'https://m.tuniucdn.com/fb3/s1/2n9c/2gLT4ZgJ8ZuS7sSmXzYoCXnV248p_w200_h200_c1_t0.jpg');
 INSERT INTO `tb_hotel` VALUES (1942938880, '北京乐多港万豪酒店', '城南街道南口路29号', 227, 45, '万豪', '北京', '五钻', '昌平城区/十三陵度假区', '40.23264', '116.188888', 'https://m.tuniucdn.com/fb3/s1/2n9c/3mBWaZeaqq54E7kX2n7g9b2CZX6q_w200_h200_c1_t0.jpg');
 INSERT INTO `tb_hotel` VALUES (1942992995, '上海嘉定凯悦酒店', '裕民南路1366号', 758, 46, '凯悦', '上海', '五钻', '嘉定新城', '31.352298', '121.263314', 'https://m.tuniucdn.com/fb2/t1/G6/M00/53/2D/Cii-U13edkqIfZhLAAJEW25WIF4AAGVxQIg38sAAkRz517_w200_h200_c1_t0.jpg');
-INSERT INTO `tb_hotel` VALUES (1951709780, '深圳同泰万怡酒店', '福海街道宝安大道 6259号', 617, 48, '万怡', '深圳', '五钻', '深圳国际会展中心商圈', '22.678611', '113.805695', 'https://m.tuniucdn.com/fb3/s1/2n9c/3oUfktphxMAWq9hUxD9uqdjRdZGB_w200_h200_c1_t0.jpg');
+INSERT INTO `tb_hotel` VALUES (1951709780, '深圳同泰万怡酒店', '福海街道宝安大道6259号', 617, 48, '万怡', '深圳', '五钻', '深圳国际会展中心商圈', '22.678611', '113.805695', 'https://m.tuniucdn.com/fb3/s1/2n9c/3oUfktphxMAWq9hUxD9uqdjRdZGB_w200_h200_c1_t0.jpg');
 INSERT INTO `tb_hotel` VALUES (1973839294, '深圳湾万怡酒店', '科技南路16号', 508, 47, '万怡', '深圳', '五钻', '科技园', '22.531101', '113.950615', 'https://m.tuniucdn.com/fb3/s1/2n9c/8C9QscRsvTWCx92wt17GAegEMFn_w200_h200_c1_t0.jpg');
 INSERT INTO `tb_hotel` VALUES (1975922994, '如家酒店·neo(深圳南山海岸城南油地铁站店)', '南商路84-6号', 238, 44, '如家', '深圳', '二钻', '海岸城/后海', '22.513566', '113.9291', 'https://m.tuniucdn.com/fb2/t1/G6/M00/25/5E/Cii-TF3PGD-IQ0FcAAFIZC82AnkAAEVvAKdj4YAAUh8638_w200_h200_c1_t0.jpg');
 INSERT INTO `tb_hotel` VALUES (1989806195, '深圳博林天瑞喜来登酒店', '留仙大道4088号', 1369, 48, '喜来登', '深圳', '五钻', '大学城/西丽动物园', '22.582918', '113.97219', 'https://m.tuniucdn.com/fb3/s1/2n9c/4Rx55fZoneUeKbE3TCRSPB6WQ6bw_w200_h200_c1_t0.jpg');
@@ -241,5 +241,7 @@ INSERT INTO `tb_hotel` VALUES (2058250574, '深圳湾万丽酒店', '粤海街�
 INSERT INTO `tb_hotel` VALUES (2060510277, '北京金隅八达岭皇冠假日酒店', '妫水北街1号1-14幢', 1026, 44, '皇冠假日', '北京', '五钻', '延庆休闲度假区', '40.476483', '115.97481', 'https://m.tuniucdn.com/fb3/s1/2n9c/3Dzq2KxgiQbmb1sbc5iK6xqpVuFr_w200_h200_c1_t0.jpg');
 INSERT INTO `tb_hotel` VALUES (2060618247, '汉庭酒店(深圳海岸城店)', '粤海街道后海社区后海第二统建楼商业裙楼第二层B', 562, 49, '汉庭', '深圳', '二钻', '海岸城/后海', '22.507276', '113.931251', 'https://m.tuniucdn.com/fb3/s1/2n9c/TBoXdgEx5Yjc2HobeC3fPWWnSJi_w200_h200_c1_t0.jpg');
 INSERT INTO `tb_hotel` VALUES (2062643512, '深圳国际会展中心希尔顿酒店', '展丰路80号', 285, 46, '希尔顿', '深圳', '五钻', '深圳国际会展中心商圈', '22.705335', '113.77794', 'https://m.tuniucdn.com/fb3/s1/2n9c/2SHUVXNrN5NsXsTUwcd1yaHKbrGq_w200_h200_c1_t0.jpg');
+INSERT INTO `tb_hotel` VALUES (2062643513, '麓枫酒店', '广州市越秀区中山一路60号', 478, 48, '麓枫', '广州', '四星级', '珠江新城/琶洲会展中心', '23.126691', '113.305252', 'https://p3.music.126.net/Y3C5ob6SQjXRijaVNBu4Sw==/109951164400648086.jpg');
+INSERT INTO `tb_hotel` VALUES (2062643514, '宜尚酒店（琶洲会展中心店）', '广州市天河区琶洲会展中心122号', 399, 47, '宜尚', '广州', '三星级', '琶洲会展中心', '23.107876', '113.374096', 'https://m.tuniucdn.com/fb3/s1/2n9c/26VREqAQdaGFvJdAJALVtjxcNMpL_w200_h200_c1_t0.jpg');
 
 SET FOREIGN_KEY_CHECKS = 1;
