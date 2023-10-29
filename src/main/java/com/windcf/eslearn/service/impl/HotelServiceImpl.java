@@ -73,17 +73,19 @@ public class HotelServiceImpl implements HotelService {
 
     @Override
     public Integer loadEs() {
-        IndexCoordinates indexCoordinates = IndexCoordinates.of("hotel");
+        IndexCoordinates indexCoordinates = elasticsearchOperations.getIndexCoordinatesFor(HotelDoc.class);
         boolean exists = elasticsearchOperations.indexOps(indexCoordinates).exists();
-        if (exists && elasticsearchOperations.count(new NativeQueryBuilder().withQuery(QueryBuilders.matchAll().build()._toQuery()).build(), indexCoordinates) != 0) {
-            return 0;
+        if (exists) {
+            if (elasticsearchOperations.count(new NativeQueryBuilder().withQuery(QueryBuilders.matchAll().build()._toQuery()).build(), indexCoordinates) != 0) {
+                return 0;
+            }
+        } else {
+            Settings settings = elasticsearchOperations.indexOps(indexCoordinates).createSettings(HotelDoc.class);
+            Document mapping = elasticsearchOperations.indexOps(indexCoordinates).createMapping(HotelDoc.class);
+            if (!elasticsearchOperations.indexOps(indexCoordinates).create(settings, mapping)) {
+                throw new IllegalStateException("创建索引失败");
+            }
         }
-        Settings settings = elasticsearchOperations.indexOps(indexCoordinates).createSettings(HotelDoc.class);
-        Document mapping = elasticsearchOperations.indexOps(indexCoordinates).createMapping(HotelDoc.class);
-        if (!elasticsearchOperations.indexOps(indexCoordinates).create(settings, mapping)) {
-            throw new IllegalStateException("创建索引失败");
-        }
-
         List<Hotel> docs = this.list();
         List<IndexQuery> indexQueries = docs.stream().map(HotelDoc::new)
                 .map(doc -> new IndexQueryBuilder()
