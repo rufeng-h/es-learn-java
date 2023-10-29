@@ -51,6 +51,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -244,5 +245,10 @@ class MyTests {
         ElasticsearchTemplate elasticsearchTemplate = (ElasticsearchTemplate) elasticsearchOperations;
         AnalyzeResponse response = elasticsearchTemplate.execute(client -> client.indices().analyze(analyzeRequest));
         System.out.println(response.tokens());
+    }
+
+    @Test
+    void testUpdateById() {
+        hotelService.updateById(2062643514L);
     }
 }

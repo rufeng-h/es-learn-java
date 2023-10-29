@@ -75,7 +75,7 @@ public class HotelDoc {
         this.business = hotel.getBusiness();
         this.location = hotel.getLatitude() + ", " + hotel.getLongitude();
         this.pic = hotel.getPic();
-        this.ad = this.id % 3 == 0;
+        this.ad = this.id % 10 == 0;
 
         List<String> input = new ArrayList<>();
         input.add(this.name);

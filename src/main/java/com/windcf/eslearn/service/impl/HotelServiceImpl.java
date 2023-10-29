@@ -169,7 +169,7 @@ public class HotelServiceImpl implements HotelService {
         Hotel hotel = hotelMapper.selectByPrimaryKey(id);
         IndexCoordinates indexCoordinates = elasticsearchOperations.indexOps(HotelDoc.class).getIndexCoordinates();
         HotelDoc hotelDoc = new HotelDoc(hotel);
-        UpdateRequest<Object, Object> updateRequest = UpdateRequest.of(b -> b.id(id.toString()).doc(hotelDoc).index(indexCoordinates.getIndexName()));
+        UpdateRequest<Object, Object> updateRequest = UpdateRequest.of(b -> b.id(id.toString()).doc(hotelDoc).index(indexCoordinates.getIndexName()).upsert(hotelDoc));
         try {
             elasticsearchClient.update(updateRequest, HotelService.class);
 
