@@ -25,10 +25,10 @@ public interface HotelRepository extends ElasticsearchRepository<HotelDoc, Strin
 
     @NonNull
     Page<HotelDoc> findByAllAndBrandAndCityAndStarNameAndPriceBetween(@Nullable String all,
-                                                                                              @Nullable String brand,
-                                                                                              @Nullable String city,
-                                                                                              @Nullable String starName,
-                                                                                              @Nullable Integer minPrice,
-                                                                                              @Nullable Integer maxPrice,
-                                                                                              @NonNull Pageable pageable);
+                                                                      @Nullable String brand,
+                                                                      @Nullable String city,
+                                                                      @Nullable String starName,
+                                                                      @Nullable Integer minPrice,
+                                                                      @Nullable Integer maxPrice,
+                                                                      @NonNull Pageable pageable);
 }

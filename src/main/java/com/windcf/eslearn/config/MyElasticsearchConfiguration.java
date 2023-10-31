@@ -14,8 +14,6 @@ import org.springframework.data.elasticsearch.client.elc.ElasticsearchConfigurat
 import org.springframework.lang.NonNull;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author chunf
@@ -33,16 +31,16 @@ public class MyElasticsearchConfiguration extends ElasticsearchConfiguration {
     @NonNull
     @Bean
     public ClientConfiguration clientConfiguration() {
-        List<String> uris = elasticsearchProperties.getUris();
-        List<String> hostAndPort = new ArrayList<>();
-        for (String s : uris) {
-            URI uri = URI.create(s);
-            hostAndPort.add(uri.getHost() + ":" + uri.getPort());
-        }
+        String[] hostAndPort = elasticsearchProperties.getUris()
+                .stream()
+                .map(s -> {
+                    URI uri = URI.create(s);
+                    return uri.getHost() + ":" + uri.getPort();
+                }).toArray(String[]::new);
 
         return ClientConfiguration
                 .builder()
-                .connectedTo(hostAndPort.toArray(new String[0]))
+                .connectedTo(hostAndPort)
                 .withBasicAuth(elasticsearchProperties.getUsername(), elasticsearchProperties.getPassword())
                 .withPathPrefix(elasticsearchProperties.getPathPrefix())
                 .withConnectTimeout(elasticsearchProperties.getConnectionTimeout())

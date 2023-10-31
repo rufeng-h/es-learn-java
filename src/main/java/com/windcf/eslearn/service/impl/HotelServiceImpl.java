@@ -75,22 +75,19 @@ public class HotelServiceImpl implements HotelService {
     public Integer loadEs() {
         IndexCoordinates indexCoordinates = IndexCoordinates.of("hotel");
         boolean exists = elasticsearchOperations.indexOps(indexCoordinates).exists();
-        if (exists && elasticsearchOperations.count(new NativeQueryBuilder().withQuery(QueryBuilders.matchAll().build()._toQuery()).build(), indexCoordinates) != 0) {
-            return 0;
+        if (exists) {
+            if (elasticsearchOperations.count(new NativeQueryBuilder().withQuery(QueryBuilders.matchAll().build()._toQuery()).build(), indexCoordinates) != 0) {
+                return 0;
+            }
+        } else {
+            Settings settings = elasticsearchOperations.indexOps(indexCoordinates).createSettings(HotelDoc.class);
+            Document mapping = elasticsearchOperations.indexOps(indexCoordinates).createMapping(HotelDoc.class);
+            if (!elasticsearchOperations.indexOps(indexCoordinates).create(settings, mapping)) {
+                throw new IllegalStateException("创建索引失败");
+            }
         }
-        Settings settings = elasticsearchOperations.indexOps(indexCoordinates).createSettings(HotelDoc.class);
-        Document mapping = elasticsearchOperations.indexOps(indexCoordinates).createMapping(HotelDoc.class);
-        if (!elasticsearchOperations.indexOps(indexCoordinates).create(settings, mapping)) {
-            throw new IllegalStateException("创建索引失败");
-        }
-
         List<Hotel> docs = this.list();
-        List<IndexQuery> indexQueries = docs.stream().map(HotelDoc::new)
-                .map(doc -> new IndexQueryBuilder()
-                        .withIndex(indexCoordinates.getIndexName())
-                        .withId(doc.getId().toString())
-                        .withObject(doc).build())
-                .collect(Collectors.toList());
+        List<IndexQuery> indexQueries = docs.stream().map(HotelDoc::new).map(doc -> new IndexQueryBuilder().withIndex(indexCoordinates.getIndexName()).withId(doc.getId().toString()).withObject(doc).build()).collect(Collectors.toList());
         List<IndexedObjectInformation> informations = elasticsearchOperations.bulkIndex(indexQueries, indexCoordinates);
         return informations.size();
     }
@@ -118,10 +115,7 @@ public class HotelServiceImpl implements HotelService {
         Aggregation starName = new Aggregation.Builder().terms(b -> b.field("starName")).build();
         Aggregation brand = new Aggregation.Builder().terms(b -> b.field("brand")).build();
 
-        NativeQuery nativeQuery = builder.withAggregation("city", city)
-                .withAggregation("starName", starName)
-                .withAggregation("brand", brand)
-                .build();
+        NativeQuery nativeQuery = builder.withAggregation("city", city).withAggregation("starName", starName).withAggregation("brand", brand).build();
         nativeQuery.setMaxResults(0);
         SearchHits<HotelDoc> searchHits = elasticsearchOperations.search(nativeQuery, HotelDoc.class);
         @SuppressWarnings("unchecked") AggregationsContainer<List<ElasticsearchAggregation>> aggregations = (AggregationsContainer<List<ElasticsearchAggregation>>) searchHits.getAggregations();
@@ -202,14 +196,9 @@ public class HotelServiceImpl implements HotelService {
         Query functionFilter = QueryBuilders.term().field("ad").value(true).build()._toQuery();
         Query boolQuery = QueryBuilders.bool().must(queries).build()._toQuery();
 
-        Query functionScore = QueryBuilders.functionScore(
-                b -> b.query(boolQuery).functions(
-                        b1 -> b1.filter(functionFilter).weight(10.0)).boostMode(FunctionBoostMode.Multiply));
+        Query functionScore = QueryBuilders.functionScore(b -> b.query(boolQuery).functions(b1 -> b1.filter(functionFilter).weight(10.0)).boostMode(FunctionBoostMode.Multiply));
 
-        return new NativeQueryBuilder()
-                .withSort(Sort.by(prepareOrders(param)))
-                .withQuery(functionScore)
-                .withPageable(pageRequest);
+        return new NativeQueryBuilder().withSort(Sort.by(prepareOrders(param))).withQuery(functionScore).withPageable(pageRequest);
     }
 
     @NonNull
