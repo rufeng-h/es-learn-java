@@ -2,21 +2,7 @@ server:
   port: 8089
 
 spring:
-  elasticsearch:
-    username: elastic
-    password: yq7UbfMeNNGkvFh2gBf_
-    uris: http://localhost:9200
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: 123456
-    url: jdbc:mysql://localhost:3306/es?serverTimezone=Asia/Shanghai
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: elastic
-    password: yq7UbfMeNNGkvFh2gBf_
-    virtual-host: /
     listener:
       simple:
         acknowledge-mode: auto  # 自动ack
@@ -26,8 +12,21 @@ spring:
           max-interval: 10000   # 重试最大间隔时间
           initial-interval: 2000  # 重试初始间隔时间
           multiplier: 2 # 间隔时间乘子，间隔时间*乘子=下一次的间隔时间，最大不能超过设置的最大间隔时间
-        default-requeue-rejected:
-
+        default-requeue-rejected: false
+    username: elastic
+    password: yq7UbfMeNNGkvFh2gBf_
+    virtual-host: /
+    host: localhost
+    port: 5672
+  elasticsearch:
+    username: elastic
+    password: yq7UbfMeNNGkvFh2gBf_
+    uris: http://localhost:9200
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 123456
+    url: jdbc:mysql://localhost:3306/es?serverTimezone=Asia/Shanghai
   # jackson
   jackson:
     default-property-inclusion: non_null

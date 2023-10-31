@@ -73,7 +73,7 @@ public class HotelServiceImpl implements HotelService {
 
     @Override
     public Integer loadEs() {
-        IndexCoordinates indexCoordinates = IndexCoordinates.of("hotel");
+        IndexCoordinates indexCoordinates = elasticsearchOperations.getIndexCoordinatesFor(HotelDoc.class);
         boolean exists = elasticsearchOperations.indexOps(indexCoordinates).exists();
         if (exists) {
             if (elasticsearchOperations.count(new NativeQueryBuilder().withQuery(QueryBuilders.matchAll().build()._toQuery()).build(), indexCoordinates) != 0) {

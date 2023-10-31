@@ -1,5 +1,8 @@
 package com.windcf.eslearn.constant;
 
+/**
+ * @author chunf
+ */
 public class HotelMqConstant {
     public static final String EXCHANGE_NAME = "hotel.topic";
     public static final String INSERT_QUEUE_NAME = "hotel.insert.queue";

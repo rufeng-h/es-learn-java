@@ -1,15 +1,12 @@
-# Docker安装Elasticsearch8
+## Docker安装Elasticsearch8
 
 本人使用的Elasticsearch版本是8.3.2。
 
 Windows基于WSL2的Docker Desktop，版本24.0.6。
 
-```shell
-docker pull elasticsearch:8.3.2
-docker pull kibana:8.3.2
-```
+### 启用https
 
-docker-compose.yml
+`docker-compose.yml`
 
 下面配置未指定es的配置文件，es启动后会默认生成。
 
@@ -53,7 +50,7 @@ networks:
 
 要正常访问es需要ca证书以及用户名密码。
 
-ca证书
+讲ca证书从容器中拷贝出来
 
 ```shell
 docker cp es:/usr/share/elasticsearch/config/certs/http_ca.crt .
@@ -68,6 +65,7 @@ docker cp es:/usr/share/elasticsearch/config/certs/http_ca.crt .
 密码和令牌可以使用es的脚本生成。
 
 ```shell
+# -i参数可以指定密码
 docker exec -it es /usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic
 docker exec -it es /usr/share/elasticsearch/bin/elasticsearch-create-enrollment-token --scope kibana
 ```
@@ -128,7 +126,7 @@ xpack.security.transport.ssl:
 #----------------------- END SECURITY AUTO CONFIGURATION -------------------------
 ```
 
-## 在Postman中访问es
+### 在Postman中访问https的es
 
 1. postman中配置刚刚从es中复制的ca证书，settings->Certificates，配置域名、端口、ca证书。
 
@@ -137,6 +135,57 @@ xpack.security.transport.ssl:
 2. HTTP请求添加Basic Auth，每个请求的Authorization选择Basic Auth，输入用户名密码。
 
    ![image-20231018154714751](./es学习.assets/image-20231018154714751.png)
+
+### 不使用https
+
+只需要需改配置文件即可，在`docker-compose.yml`挂载配置文件`elasticsearch.yml`
+
+```yaml
+#cluster.name: "docker-cluster"
+#network.host: 0.0.0.0
+
+cluster.name: "docker-cluster"
+network.host: 0.0.0.0
+
+#----------------------- BEGIN SECURITY AUTO CONFIGURATION -----------------------
+#
+# The following settings, TLS certificates, and keys have been automatically
+# generated to configure Elasticsearch security features on 18-10-2023 07:21:12
+#
+# --------------------------------------------------------------------------------
+
+# Enable security features
+xpack.security.enabled: true
+
+xpack.security.enrollment.enabled: true
+
+# 跨域配置
+http.cors.enabled: true
+http.cors.allow-origin: "*"
+http.cors.allow-headers: X-Requested-With,Content-Type,Content-Length,Authorization
+```
+
+## 相关概念
+
+- index，索引，文档的集合，相当于关系型数据库的表（Table），包含表结构（mapping）和表配置（setting）两个选项。
+
+- mapping，表结构，每个字段的数据类型相关配置。
+- doc，文档，每个文档（Document）相当于关系型数据库中的行（Row），文档的字段（Field）相当于数据库中的列（Column）。
+- Inverted index，倒排索引，先对文档进行分词，词条记录对应文档信息，查询时通过词条定位到文档。
+- analyzer，分词器，将文本拆分成词条，对于英文，可直接按照空格拆分，默认情况下中文会按每个字拆分，支持中文分词需要安装插件。es中分词器的组合包含三个部分
+  - character filters，字符过滤器，在分词之前对文本进行处理，例如删除停用词，替换字符等。
+  - tokenizer，将文本切分成词条（term）。
+  - tokenizer filters，进一步处理分词结果，例如大小写转换，同义词替换等。
+
+## 各种检索
+
+- [collapse字段折叠](https://blog.csdn.net/ZYC88888/article/details/83023143)，按照特定的字段分组，每组均返回结果，例如搜索手机，每个品牌都想看看，按品牌字段折叠，返回每个品牌的可排序、过滤的数据。
+- [filter过滤](https://juejin.cn/post/7073820135873576997)，与query使用场景不同。
+- [highlight高亮]()，对存在检索关键词的结果字段添加特殊标签。
+- [async异步搜索](https://blog.csdn.net/UbuntuTouch/article/details/107868114)，检索大量数据，可查看检索的运行状态。
+- [near real-time近实时搜索](https://doc.yonyoucloud.com/doc/mastering-elasticsearch/chapter-3/34_README.html)，添加或更新文档不修改旧的索引文件，写新文件到缓存，延迟刷盘。
+- [pagination排序]，普通排序，深度分页scroll，search after。
+- [inner hits子文档命中](https://www.jianshu.com/p/0d6488a8072b)，对嵌套对象子文档进行搜索时，可以满足查询条件的具体子文档。
 
 ## Python Client
 
