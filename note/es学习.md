@@ -177,7 +177,7 @@ http.cors.allow-headers: X-Requested-With,Content-Type,Content-Length,Authorizat
   - tokenizer，将文本切分成词条（term）。
   - tokenizer filters，进一步处理分词结果，例如大小写转换，同义词替换等。
 
-## 各种检索
+## 特性
 
 - [collapse字段折叠](https://blog.csdn.net/ZYC88888/article/details/83023143)，按照特定的字段分组，每组均返回结果，例如搜索手机，每个品牌都想看看，按品牌字段折叠，返回每个品牌的可排序、过滤的数据。
 - [filter过滤](https://juejin.cn/post/7073820135873576997)，与query使用场景不同。
@@ -185,7 +185,17 @@ http.cors.allow-headers: X-Requested-With,Content-Type,Content-Length,Authorizat
 - [async异步搜索](https://blog.csdn.net/UbuntuTouch/article/details/107868114)，检索大量数据，可查看检索的运行状态。
 - [near real-time近实时搜索](https://doc.yonyoucloud.com/doc/mastering-elasticsearch/chapter-3/34_README.html)，添加或更新文档不修改旧的索引文件，写新文件到缓存，延迟刷盘。
 - [pagination排序]，普通排序，深度分页scroll，search after。
-- [inner hits子文档命中](https://www.jianshu.com/p/0d6488a8072b)，对嵌套对象子文档进行搜索时，可以满足查询条件的具体子文档。
+- [inner hits子文档命中](https://www.jianshu.com/p/0d6488a8072b)，对嵌套对象子文档进行搜索时，可以满足查询条件的具体子文档。[]
+- selected field返回需要的字段，使用_source和fileds返回需要的文档字段。
+- across clusters分布式检索，支持多种检索API的分布式搜索。
+- [multiple indices多索引检索]，支持同时从一次从多个索引检索数据。
+- [shard routing分片路由]，自适应分片路由以减少搜索响应时间，可自定义检索哪个节点。
+- [自定义检索模板search templates]，可复用的检索模板，根据不同变量生成不同query dsl。
+- [同义词检索search with synonyms]，定义同义词集、过滤器和分词器，提高检索准确度。
+- [排序sort results]，支持多字段，数组字段、嵌套字段排序。
+- [最邻近搜索knn search]，检索最邻近的向量，常用于相关性排名、搜索建议、图像视频检索。
+- [语义检索semantic search]，按语义和意图检索，而不是词汇检索，基于NLP和向量检索，支持上传模型，在存储和检索时自动编码，支持混合检索。
+- 
 
 ## Python Client
 
