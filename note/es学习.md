@@ -177,6 +177,17 @@ http.cors.allow-headers: X-Requested-With,Content-Type,Content-Length,Authorizat
   - tokenizer，将文本切分成词条（term）。
   - tokenizer filters，进一步处理分词结果，例如大小写转换，同义词替换等。
 
+## 映射
+
+- 动态映射，无需指定mapping（建表），直接添加数据，es自动检测数据类型，数据类型推断规则可自定义，一般不推荐使用。
+- 显式映射，指定mapping。
+- 运行时字段，不改变原索引，在查询时动态计算生成的虚拟字段，支持排序等操作。
+- 数据类型，[所有支持的数据类型](https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html)
+- [元数据字段](https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-fields.html)，文档元数据信息，如id，所在索引等。
+- 字段参数，创建字段时的各种参数，例如分词器、时间格式，向量距离度量方式。
+- 映射限制，限制mapping的字段个数、字段长度、嵌套字段深度等。
+- 8版本之后删除了mapping type。
+
 ## 特性
 
 - [collapse字段折叠](https://blog.csdn.net/ZYC88888/article/details/83023143)，按照特定的字段分组，每组均返回结果，例如搜索手机，每个品牌都想看看，按品牌字段折叠，返回每个品牌的可排序、过滤的数据。
@@ -195,7 +206,6 @@ http.cors.allow-headers: X-Requested-With,Content-Type,Content-Length,Authorizat
 - [排序sort results]，支持多字段，数组字段、嵌套字段排序。
 - [最邻近搜索knn search]，检索最邻近的向量，常用于相关性排名、搜索建议、图像视频检索。
 - [语义检索semantic search]，按语义和意图检索，而不是词汇检索，基于NLP和向量检索，支持上传模型，在存储和检索时自动编码，支持混合检索。
-- 
 
 ## Python Client
 
