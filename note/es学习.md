@@ -177,48 +177,63 @@ http.cors.allow-headers: X-Requested-With,Content-Type,Content-Length,Authorizat
   - tokenizer，将文本切分成词条（term）。
   - tokenizer filters，进一步处理分词结果，例如大小写转换，同义词替换等。
 
-## 特性
+## 检索特性
 
 - [collapse字段折叠](https://blog.csdn.net/ZYC88888/article/details/83023143)，按照特定的字段分组，每组均返回结果，例如搜索手机，每个品牌都想看看，按品牌字段折叠，返回每个品牌的可排序、过滤的数据。
+
 - [filter过滤](https://juejin.cn/post/7073820135873576997)，与query使用场景不同。
+
 - [highlight高亮]()，对存在检索关键词的结果字段添加特殊标签。
+
 - [async异步搜索](https://blog.csdn.net/UbuntuTouch/article/details/107868114)，检索大量数据，可查看检索的运行状态。
+
 - [near real-time近实时搜索](https://doc.yonyoucloud.com/doc/mastering-elasticsearch/chapter-3/34_README.html)，添加或更新文档不修改旧的索引文件，写新文件到缓存，延迟刷盘。
-- [pagination排序]，普通排序，深度分页scroll，search after。
+
+- pagination排序，普通排序，深度分页scroll，search after。
+
 - [inner hits子文档命中](https://www.jianshu.com/p/0d6488a8072b)，对嵌套对象子文档进行搜索时，可以满足查询条件的具体子文档。[]
+
 - selected field返回需要的字段，使用_source和fileds返回需要的文档字段。
+
 - across clusters分布式检索，支持多种检索API的分布式搜索。
-- [multiple indices多索引检索]，支持同时从一次从多个索引检索数据。
-- [shard routing分片路由]，自适应分片路由以减少搜索响应时间，可自定义检索哪个节点。
-- [自定义检索模板search templates]，可复用的检索模板，根据不同变量生成不同query dsl。
-- [同义词检索search with synonyms]，定义同义词集、过滤器和分词器，提高检索准确度。
-- [排序sort results]，支持多字段，数组字段、嵌套字段排序。
-- [最邻近搜索knn search]，检索最邻近的向量，常用于相关性排名、搜索建议、图像视频检索。
-- [语义检索semantic search]，按语义和意图检索，而不是词汇检索，基于NLP和向量检索，支持上传模型，在存储和检索时自动编码，支持混合检索。
-- 
+
+- multiple indices多索引检索，支持同时从一次从多个索引检索数据。
+
+- shard routing分片路由，自适应分片路由以减少搜索响应时间，可自定义检索哪个节点。
+
+- 自定义检索模板search templates，可复用的检索模板，根据不同变量生成不同query dsl。
+
+- 同义词检索search with synonyms，定义同义词集、过滤器和分词器，提高检索准确度。
+
+- 排序sort results，支持多字段，数组字段、嵌套字段排序。
+
+- [最邻近搜索knn search](https://www.elastic.co/guide/en/elasticsearch/reference/current/knn-search.html)，检索最邻近的向量，常用于相关性排名、搜索建议、图像视频检索。
+
+- [语义检索semantic search](https://www.elastic.co/guide/en/elasticsearch/reference/current/semantic-search.html)，按语义和意图检索，而不是词汇检索，基于NLP和向量检索，支持上传模型，在存储和检索时自动编码，支持混合检索。
+
+  所有的检索特性可以查看[官方文档]()
 
 ## Python Client
 
 ```python
 from pprint import pprint
 
-# 8.3.2
 from elasticsearch import Elasticsearch
 
-es_password = 'yq7UbfMeNNGkvFh2gBf_'
+es_password = 'h-3yzvInloC6Dl+==7UX'
 
 client = Elasticsearch(hosts='http://localhost:9200',
                        # ca_certs=os.path.join(os.path.dirname(__file__), 'http_ca.crt'),
                        basic_auth=('elastic', es_password))
 
 pprint(client.info().body)
-pprint(client.perform_request('POST', '/_analyze',
-                              headers={'Content-Type': "application/vnd.elasticsearch+json;compatible-with=8",
-                                       "Accept": "application/vnd.elasticsearch+json;compatible-with=8"},
-                              body={
-                                  'text': '黑马程序员的Java和Python教的真不错，很好用',
-                                  "analyzer": "ik_max_word"
-                              }).body)
+response = client.perform_request('POST', '/kyjy-test/_search',
+                                  headers={
+                                      'Content-Type': "application/vnd.elasticsearch+json;compatible-with=8",
+                                      "Accept": "application/vnd.elasticsearch+json;compatible-with=8"},
+                                  body={'query': {'match': {'content': '人员管理'}},
+                                        '_source': {'excludes': 'vector'}})
+pprint(response.body)
 ```
 
 ## Java Client
@@ -242,6 +257,8 @@ pprint(client.perform_request('POST', '/_analyze',
 Elasticsearch Config配置类
 
 ```java
+package com.windcf.eslearn.config;
+
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
@@ -256,8 +273,6 @@ import org.springframework.data.elasticsearch.client.elc.ElasticsearchConfigurat
 import org.springframework.lang.NonNull;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author chunf
@@ -265,41 +280,107 @@ import java.util.List;
 
 @Configuration
 public class MyElasticsearchConfiguration extends ElasticsearchConfiguration {
-   private final ElasticsearchProperties elasticsearchProperties;
+    private final ElasticsearchProperties elasticsearchProperties;
 
-   MyElasticsearchConfiguration(ElasticsearchProperties elasticsearchProperties) {
-      this.elasticsearchProperties = elasticsearchProperties;
-   }
+    MyElasticsearchConfiguration(ElasticsearchProperties elasticsearchProperties) {
+        this.elasticsearchProperties = elasticsearchProperties;
+    }
 
-   @Override
-   @NonNull
-   @Bean
-   public ClientConfiguration clientConfiguration() {
-      List<String> uris = elasticsearchProperties.getUris();
-      List<String> hostAndPort = new ArrayList<>();
-      for (String s : uris) {
-         URI uri = URI.create(s);
-         hostAndPort.add(uri.getHost() + ":" + uri.getPort());
-      }
+    @Override
+    @NonNull
+    @Bean
+    public ClientConfiguration clientConfiguration() {
+        String[] hostAndPort = elasticsearchProperties.getUris()
+                .stream()
+                .map(s -> {
+                    URI uri = URI.create(s);
+                    return uri.getHost() + ":" + uri.getPort();
+                }).toArray(String[]::new);
 
-      return ClientConfiguration
-              .builder()
-              .connectedTo(hostAndPort.toArray(new String[0]))
-              .withBasicAuth(elasticsearchProperties.getUsername(), elasticsearchProperties.getPassword())
-              .withPathPrefix(elasticsearchProperties.getPathPrefix())
-              .withConnectTimeout(elasticsearchProperties.getConnectionTimeout())
-              .withSocketTimeout(elasticsearchProperties.getSocketTimeout())
-              .build();
-   }
+        return ClientConfiguration
+                .builder()
+                .connectedTo(hostAndPort)
+                .withBasicAuth(elasticsearchProperties.getUsername(), elasticsearchProperties.getPassword())
+                .withPathPrefix(elasticsearchProperties.getPathPrefix())
+                .withConnectTimeout(elasticsearchProperties.getConnectionTimeout())
+                .withSocketTimeout(elasticsearchProperties.getSocketTimeout())
+                .build();
+    }
 
-   @Override
-   @Bean
-   @NonNull
-   public ElasticsearchClient elasticsearchClient(@NonNull RestClient restClient) {
-      ElasticsearchTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
-      return new AutoCloseableElasticsearchClient(transport);
-   }
+    @Override
+    @Bean
+    @NonNull
+    public ElasticsearchClient elasticsearchClient(@NonNull RestClient restClient) {
+        ElasticsearchTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
+        return new AutoCloseableElasticsearchClient(transport);
+    }
 
+    /**
+     * not recommanded
+     */
+    @Override
+    protected boolean writeTypeHints() {
+        return false;
+    }
 }
 ```
+
+## 踩坑
+
+截至2023年11月04日，Springboot2.17整合Springdata Elasticsearch与Java Client Api还有些不兼容，本人踩了几个BUG。
+
+1. Sort排序不支持
+
+   ```java
+   @SpringBootTest
+   @ActiveProfiles("dev")
+   class EsLearnApplicationTests {
+       @Autowired
+       private ElasticsearchClient elasticsearchClient;
+   
+       @Autowired
+       private ElasticsearchOperations elasticsearchOperations;
+   
+       @Test
+       void sortQueryByEsOperations() {
+           Sort sort = Sort.by(Sort.Direction.DESC, "score");
+           NativeQuery nativeQuery = new NativeQueryBuilder().withSort(sort)
+                   .withQuery(QueryBuilders.range(b -> b.field("price").gte(JsonData.of(300))))
+                   .build();
+           SearchHits<HotelDoc> searchHits = elasticsearchOperations.search(nativeQuery, HotelDoc.class);
+           for (SearchHit<HotelDoc> searchHit : searchHits) {
+               System.out.println(searchHit.getContent());
+           }
+       }
+   
+       @Test
+       void sortQueryByEsClient() throws IOException {
+           Query rangeQuery = QueryBuilders.range().field("price").gte(JsonData.of(300)).build()._toQuery();
+           SortOptions sortOptions = SortOptionsBuilders.field(builder -> builder.field("score").order(SortOrder.Desc).mode(SortMode.Min));
+           SearchRequest searchRequest = SearchRequest.of(builder -> builder.index("hotel").query(rangeQuery).sort(sortOptions));
+           System.out.println(searchRequest.toString());
+   
+           SearchResponse<HotelDoc> searchResponse = elasticsearchClient.search(searchRequest, HotelDoc.class);
+           for (Hit<HotelDoc> hit : searchResponse.hits().hits()) {
+               System.out.println(hit.source());
+           }
+       }
+   }
+   ```
+
+   使用`java client api8.3.2`时，Test1报错，Test通过，所以是Springdata Elasticsearch功能还没有跟上，毕竟官方标配的ES版本还是7.17。
+
+   升级`java client api`包到8.5及以上版本解决此问题。
+
+   
+
+2. 不支持Suggestion
+
+   ![image-20231104204957318](./es学习.assets/image-20231104204957318.png)
+
+   在Springdata Elasticsearch解析Es Java Client的请求响应时，直接放弃了对suggestion的解析。
+
+建议直接使用`ElasticsearchClient`而不是`ElasticsearchOperations`，毕竟Springdata支持的是es7.17。
+
+使用较新的版本就是容易踩坑。
 
